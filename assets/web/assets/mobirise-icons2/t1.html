@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Speech test</title>
+</head>
+<body>
+  <h2>SpeechRecognition test</h2>
+  <button onclick="start()">Start</button>
+  <button onclick="stop()">Stop</button>
+  <pre id="log"></pre>
+
+
+<script>
+const logEl = document.getElementById('log');
+
+function log(msg) {
+  const time = new Date().toLocaleTimeString();
+  logEl.textContent +=  msg + '\n';
+}
+
+var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+  alert('API not supported');
+}
+
+const recognition = new SpeechRecognition();
+
+recognition.continuous = true;
+recognition.interimResults = false;
+recognition.lang = 'ru-RU';
+
+let finalText = '';
+
+recognition.onstart = () => log('🎤 START');
+
+recognition.onspeechstart = () => log('🗣 speech start');
+
+recognition.onspeechend = () => log('🤐 speech end');
+
+recognition.onaudioend = () => log('🔇 audio end');
+
+recognition.onend = () => {
+  log('🔁 restart');
+  recognition.start(); // критично для непрерывности
+};
+
+recognition.onerror = (e) => log('❌ error: ' + e.error);
+
+recognition.onresult = (event) => {
+  let interim = '';
+
+  for (let i = event.resultIndex; i < event.results.length; i++) {
+    const text = event.results[i][0].transcript;
+
+    if (event.results[i].isFinal) {
+      finalText += text;
+      log('✅ FINAL: ' + finalText);
+      finalText = ''; // сбрасываем после завершения
+    } else {
+      interim += text;
+    }
+  }
+
+//  if (interim) {
+//    log('… interim: ' + interim);
+//  }
+
+};
+
+function start() {
+  recognition.start();
+}
+
+function stop() {
+  recognition.stop();
+}
+
+</script>
+</body>
+</html>
